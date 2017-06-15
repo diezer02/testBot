@@ -38,31 +38,37 @@ const replyMessage = (message) => {
     } else {
       // Add each reply received from API to replies stack
       result.replies.forEach(replyContent => message.addReply({ type: 'text', content: replyContent }))
+
     }
 
     // Send all replies
     message.reply()
     .then(() => {
       // Do some code after sending messages
-      if(result.action.slug =='get-weather'){
+/*      */
+          if(result.action.slug =='get-weather'){
+            var meteo = '';
+             promiseWeather(result.entities.location[0].formatted).then(previsions => {
+                   console.log('meteo ok')
+                   meteo = '' + result.entities.location[0].formatted + ' :\n\n' +
+                                    '_ Température : ' + previsions.temperature + '°C\n\n' + 
+                                    '_ Humidité : ' + previsions.humidity + '%\n\n' +
+                                    '_ Vent : ' + previsions.wind + 'km/h';
+                    
+                  message.addReply({ type: 'text', content: meteo })
 
-        openweathermap(result.entities.location[0].formatted, function(success, previsions) {
-            if (!success) {
-                message.addReply('Une erreur s\'est produite, veuillez réessayer.')
-                message.reply()
-              }
-            
-            var mes = 'Voici la météo pour ' + result.entities.location[0].formatted + ' :\n\n' +
-                            '_ Température : ' + previsions.temperature + '°C\n\n' + 
-                            '_ Humidité : ' + previsions.humidity + '%\n\n' +
-                            '_ Vent : ' + previsions.wind + 'km/h';
-            
-            console.log('mes',mes)                
-            message.addReply(mes)
-        }); 
+                   message.reply()
+                  .then(() => {
+                  })
+                  .catch(err => {
+                    console.error('Error while sending message to channel', err)
+                  }) 
 
-        
-      }
+                }).catch(err =>{             
+                  message.addReply('Une erreur s\'est produite, veuillez réessayer.')
+                  message.reply()
+              })
+          }
     })
     .catch(err => {
       console.error('Error while sending message to channel', err)
@@ -73,9 +79,38 @@ const replyMessage = (message) => {
   })
 }
 
+function promiseWeather(city) {
+    return new Promise((resolve, reject) => {
+    var openWeatherMapAppId = '2d41313bdadbfebd692baa8b9a3c8ee0';
+    var url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city + '&lang=fr&units=metric&appid=' + openWeatherMapAppId;
+    
+      request(url, function(err, response, body){
+        try{        
+            var result = JSON.parse(body);
+            
+            if (result.cod != 200) {
+                reject("error");
+            } else {
+                var previsions = {
+                    temperature : Math.round(result.main.temp),
+                    humidity : result.main.humidity,
+                    wind: Math.round(result.wind.speed * 3.6),
+                    city : result.name,
+                };
+                        
+                 resolve( previsions);
+            }
+        } catch(e) {
+            reject("error"); 
+        }
+      })
+
+    })
+}
 
 
-var openweathermap = function(city, callback){
+
+var openweathermap = function(city, res1, callback){
     var openWeatherMapAppId = '2d41313bdadbfebd692baa8b9a3c8ee0';
     var url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city + '&lang=fr&units=metric&appid=' + openWeatherMapAppId;
     
@@ -93,7 +128,7 @@ var openweathermap = function(city, callback){
                     city : result.name,
                 };
                         
-                callback(true, previsions);
+                 callback(true, previsions, res1);
             }
         } catch(e) {
             callback(false); 

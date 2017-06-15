@@ -32,7 +32,7 @@ app.use('/', (request, response) => {
       console.log('Error in your bot:', error)
       if (!response.headersSent) { response.sendStatus(400) }
     } else if (success) {
-      console.log(success)
+      console.log("success tptp",success)
       if (!response.headersSent) { response.status(200).json(success) }
     }
   })
