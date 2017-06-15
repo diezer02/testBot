@@ -11,7 +11,7 @@
  * The Recast.AI SDK will handle the message and call your reply bot function (ie. replyMessage function)
  */
 
-const recastai = require('recastai').default
+const recastai = require('recastai').default    
 
 const replyMessage = require('./message')
 
@@ -51,6 +51,7 @@ export const bot = (body, response, callback) => {
     */
     client.request.converseText(body.text, { conversationToken: process.env.CONVERSATION_TOKEN || null })
       .then((res) => {
+       
         if (res.reply()) {
           /*
            * If response received from Recast.AI contains a reply
@@ -63,6 +64,7 @@ export const bot = (body, response, callback) => {
           /*
            * If response received from Recast.AI does not contain any reply
            */
+
           callback(null, {
             reply: 'No reply :(',
             conversationToken: res.conversationToken,
